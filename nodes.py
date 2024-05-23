@@ -43,7 +43,7 @@ class SendBase64ToRemote:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "base64": ("STRING", {"default": ""}),
+                "base64": ("STRING", {"forceInput": True}),
                 "remote_address": ("STRING", {"default": "127.0.0.1:8188"}),
                 "remote_node_id": ("STRING", {"default": "1"}),
                 "remote_node_input": ("STRING", {"default": "base64Images"}),
@@ -68,36 +68,44 @@ class LoadBase64FromRemote:
         return {
             "required": {
                 "remote_address": ("STRING", {"default": "127.0.0.1:8188"}),
-                "remote_ui_output": ("STRING", {"default": "base64Images"}),
+                "remote_node_id": ("STRING", {"default": "1"}),
+                "remote_node_output": ("STRING", {"default": "base64Images"}),
                 "remote_prompt": ("STRING", {"multiline": True, "dynamicPrompts": False}),
             },
         }
     RETURN_TYPES = ("STRING",)
     RETURN_NAMES = ("base64",)
 
-    def load_base64_from_remote(self, remote_address, remote_ui_output, remote_prompt):
+    def load_base64_from_remote(self, remote_address, remote_node_id, remote_node_output, remote_prompt):
         ws = websocket.WebSocket()
         ws.connect("ws://{}/ws?clientId={}".format(remote_address, get_client_id()))
 
-        prompt = json.loads(remote_prompt)
-        prompt_id = dispatch_to_remote(remote_address, prompt)
+        job_id = get_new_job_id()
+        prompt = deepcopy(json.loads(remote_prompt))
+        prompt[f"{remote_node_id}@{job_id}"] = prompt.pop(remote_node_id) # avoid cache
+        prompt_id = dispatch_to_remote(remote_address, prompt, job_id)
 
-        base64= ""
+        base64= "[]"
         while True:
             out = ws.recv()
             if not isinstance(out, str):
                 continue
             message = json.loads(out)
-            if message['type'] != 'executed':
+            if message['type'] not in ['executing', 'executed']:
                 continue
-            data = message['data']
+            data = message['data']            
             if data['prompt_id'] == prompt_id:
-                result = data['output'][remote_ui_output]
+                if data['node'] is None:
+                	break #Execution is done
+                if message['type'] != 'executed':
+                    continue
+                result = data['output'][remote_node_output]
                 if isinstance(result, list): # [base64,]
                     base64 = json.JSONEncoder().encode(result)
                 else:
                     base64 = result
                 break
+        ws.close()
         return (base64,)
 
 
