@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-remote-tools"
+description = "Node:SendBase64ToRemote. To connect to another ComfyUI server."
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["request", "websocket-client"]
+
+[project.urls]
+Repository = "https://github.com/linshier/comfyui-remote-tools"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui-remote-tools"
+Icon = ""
