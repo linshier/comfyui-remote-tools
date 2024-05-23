@@ -96,7 +96,7 @@ class LoadBase64FromRemote:
             data = message['data']            
             if data['prompt_id'] == prompt_id:
                 if data['node'] is None:
-                	break #Execution is done
+                    break #Execution is done
                 if message['type'] != 'executed':
                     continue
                 result = data['output'][remote_node_output]
