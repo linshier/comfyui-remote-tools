@@ -108,8 +108,24 @@ class LoadBase64FromRemote:
         ws.close()
         return (base64,)
 
+class LoadBase64:
+    CATEGORY = "remote-tools"
+    FUNCTION = "load_base64"
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "base64": ("STRING", {"default": "[]", "dynamicPrompts": False}),
+            },
+        }
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("base64",)
+
+    def load_base64(self, base64):
+        return (base64,)
 
 NODE_CLASS_MAPPINGS = {
     "SendBase64ToRemote" : SendBase64ToRemote,
     "LoadBase64FromRemote" : LoadBase64FromRemote,
+    "LoadBase64(js)" : LoadBase64,
 }
